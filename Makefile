@@ -3,7 +3,10 @@ AS:=nasm
 ASFLAGS:=-f bin
 
 %.bin: %.s
-	sdk/build $<
+	sdk/occ -o $@ $<
+
+%.bin: %.c
+	sdk/occ -o $@ $<
 
 .PHONY: osle_test
 osle_test: osle fixtures/text.txt.bin test/fs.test.bin
@@ -21,9 +24,12 @@ osle: osle.o bin/snake.bin bin/ed.bin bin/more.bin bin/rm.bin bin/mv.bin bin/hel
 	sdk/pack bin/mv.bin
 	sdk/pack bin/help.bin
 
-.PHONY: start
-start: osle
+.PHONY: run
+run:
 	bochs -q -f .bochsrc
+
+.PHONY: start
+start: osle run
 
 .PHONY: debug
 debug: osle_test
