@@ -82,8 +82,8 @@ case "$inextension" in
   c)
     elfobj="elf-${obj}"
     i686-elf-gcc -m16 -ffreestanding -fno-pie -nostdlib -fno-asynchronous-unwind-tables -c sdk/crt.c -o sdk/crt.o
-    i686-elf-gcc -m16 -ffreestanding -fno-pie -nostdlib -fno-asynchronous-unwind-tables -c ${infilepath} -o ${elfobj}
-    i686-elf-ld -T sdk/osle.ld -o ${obj} ${elfobj} sdk/crt.o
+    i686-elf-gcc -m16 -ffreestanding -fno-pie -nostdlib -fno-asynchronous-unwind-tables -c "${infilepath}" -o "${elfobj}"
+    i686-elf-ld -T sdk/osle.ld -o "${obj}" "${elfobj}" sdk/crt.o
     ;;
   s)
     nasm -f bin -o "${obj}" "${infilepath}"
