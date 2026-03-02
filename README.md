@@ -34,7 +34,7 @@ packs essential features like:
 ## 📚 Creating your first OSle program
 
 OSle includes a tiny [Software Development Kit (SDK)](./sdk/) that includes
-definitions and a toolchain to create your own OSle programs.
+definitions and a toolchain to create your own OSle C or x86 Assembly programs.
 
 Follow the [step-by-step tutorial](./tutorial/) to write your first program!
 
@@ -43,6 +43,7 @@ Follow the [step-by-step tutorial](./tutorial/) to write your first program!
 To develop OSle and OSle programs you will need the following tools:
 
 - [nasm](https://www.nasm.us)
+- [i686-gcc-elf](https://formulae.brew.sh/formula/i686-elf-gcc)
 - [GNU make](https://www.gnu.org/software/make/) (usually preinstalled)
 - [bochs](https://bochs.sourceforge.io) (optional)
 
@@ -55,7 +56,8 @@ Install dependencies using Homebrew:
 
 ```sh
 brew install nasm
-brew install bochs
+brew install i686-elf-gcc
+brew install bochs # optional, you can use Qemu if you prefer
 ```
 
 #### Linux
@@ -63,7 +65,7 @@ brew install bochs
 Install dependencies using your local package manager, e.g., on Debian:
 
 ```sh
-apt install nasm bochs
+apt install nasm bochs # bochs is optional
 ```
 </details>
 
@@ -73,7 +75,7 @@ These recipes will compile OSle and use the [SDK](./sdk/) to compile and bundle
 all the pre-built programs. Using `start` will also run bochs right away.
 
 ```sh
-# build and run osle on bochs
+# build and run OSle on bochs
 make start
 
 # or
@@ -86,15 +88,20 @@ qemu-system-i386 -fda osle.img
 
 ### Build and Run your OSle program
 
+You can write OSle programs in x86 Assembly, like OSle itself, or in C.
+Check out the [step-by-step tutorial](./tutorial/) to write your first program! 
+
 ```sh
 # ensure you have a working OSle image at osle.img
 make osle
 
-# compile your source to generate my_file.bin
-sdk/build my_file.s
+# compile your source to generate program.bin
+sdk/occ program.c
+# or
+sdk/occ program.s
 
 # bundle my_file.bin into the osle.img image
-sdk/pack my_file.bin
+sdk/pack program.bin
 
 # run it!
 qemu-system-i386 -fda osle.img
