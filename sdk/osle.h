@@ -41,7 +41,7 @@ typedef struct {
 // Usage:
 //
 //   exit();
-__attribute__((naked, noreturn)) static inline void exit(void) {
+__attribute__((naked, noreturn)) static void exit(void) {
   __asm__ volatile("int %0" ::"N"(INT_RETURN));
 }
 
@@ -50,7 +50,7 @@ __attribute__((naked, noreturn)) static inline void exit(void) {
 // Usage:
 //
 //   putc('A');
-static inline void putc(char c) {
+static void putc(char c) {
   __asm__ volatile("mov %0, %%al\n"
                    "mov $0x0E, %%ah\n"
                    "int $0x10\n"
@@ -64,7 +64,7 @@ static inline void putc(char c) {
 // Usage:
 //
 //   puts("Hello, world!", 13);
-static inline void puts(const char *str, unsigned maxlen) {
+static void puts(const char *str, unsigned maxlen) {
   __asm__ volatile("mov $0x0E, %%ah\n"
                    ".loop:\n"
                    "  lodsb\n"
@@ -83,7 +83,7 @@ static inline void puts(const char *str, unsigned maxlen) {
 // Usage:
 //
 //   putln("Hello, world!", 13);
-static inline void putln(const char* str, unsigned maxlen) {
+static void putln(const char* str, unsigned maxlen) {
   puts(str, maxlen);
   putc('\n');
   putc('\r');
@@ -105,7 +105,7 @@ static inline void putln(const char* str, unsigned maxlen) {
 //   if (open("myfile", &handle, &file)) {
 //     // handle error
 //   }
-static inline int open(const char *path, handle_t *handle, file_t *file) {
+static int open(const char *path, handle_t *handle, file_t *file) {
   byte_t error;
   word_t ax;
   __asm__ volatile("int %2\n"
@@ -131,7 +131,7 @@ static inline int open(const char *path, handle_t *handle, file_t *file) {
 //   if (create("newfile", &handle, &file)) {
 //     // handle error
 //   }
-static inline int create(const char *path, handle_t *handle, file_t *file) {
+static int create(const char *path, handle_t *handle, file_t *file) {
   byte_t error;
   word_t ax;
   __asm__ volatile("int %2\n"
@@ -156,7 +156,7 @@ static inline int create(const char *path, handle_t *handle, file_t *file) {
 //   if (write(handle, &file)) {
 //     // handle error
 //   }
-static inline int write(handle_t handle, file_t *file) {
+static int write(handle_t handle, file_t *file) {
   byte_t error;
   __asm__ volatile("int %1\n"
                    "setc %0\n"
@@ -172,7 +172,7 @@ static inline int write(handle_t handle, file_t *file) {
 //
 //   char c = getc();
 //   // c is the ASCII char inputed from keyboard
-static inline char getc(void) {
+static char getc(void) {
   word_t ax;
   __asm__ volatile("mov $0x00, %%ah\n"
                    "int $0x16"
