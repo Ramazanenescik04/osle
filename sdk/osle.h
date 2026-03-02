@@ -45,12 +45,26 @@ __attribute__((naked, noreturn)) static inline void exit(void) {
   __asm__ volatile("int %0" ::"N"(INT_RETURN));
 }
 
+// Prints a char on the screen at the current cursor position.
+//
+// Usage:
+//
+//   putc('A');
+static inline void putc(char c) {
+  __asm__ volatile("mov %0, %%al\n"
+                   "mov $0x0E, %%ah\n"
+                   "int $0x10\n"
+                   :
+                   : "r"(c)
+                   : "ax");
+}
+
 // Prints a null-terminated string on the screen at the current cursor position.
 //
 // Usage:
 //
 //   puts("Hello, world!", 13);
-static inline void puts(char *str, unsigned maxlen) {
+static inline void puts(const char *str, unsigned maxlen) {
   __asm__ volatile("mov $0x0E, %%ah\n"
                    ".loop:\n"
                    "  lodsb\n"
@@ -64,18 +78,15 @@ static inline void puts(char *str, unsigned maxlen) {
                    : "ax");
 }
 
-// Prints a char on the screen at the current cursor position.
+// Like puts, but appends a new line at the end.
 //
 // Usage:
 //
-//   putc('A');
-static inline void putc(char c) {
-  __asm__ volatile("mov %0, %%al\n"
-                   "mov $0x0E, %%ah\n"
-                   "int $0x10\n"
-                   :
-                   : "r"(c)
-                   : "ax");
+//   putln("Hello, world!", 13);
+static inline void putln(const char* str, unsigned maxlen) {
+  puts(str, maxlen);
+  putc('\n');
+  putc('\r');
 }
 
 // Tries to locate a file whose path is a null-terminated string in path.
@@ -153,6 +164,20 @@ static inline int write(handle_t handle, file_t *file) {
                    : "N"(INT_FS_WRITE), "b"(file), "d"(handle)
                    :);
   return error;
+}
+
+// Reads a character from keyboard input.
+//
+// Usage:
+//
+//   char c = getc();
+//   // c is the ASCII char inputed from keyboard
+static inline char getc(void) {
+  word_t ax;
+  __asm__ volatile("mov $0x00, %%ah\n"
+                   "int $0x16"
+                   : "=a"(ax)::);
+  return (char)(ax & 0xFF);
 }
 
 #endif
