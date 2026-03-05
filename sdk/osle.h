@@ -2,32 +2,57 @@
 #define OSLE_H
 
 // ==== INTERRUPTS ====
+// Software interrupt numbers for OSle services.
 #define INT_RETURN 0x20
 #define INT_FS_FIND 0x21
 #define INT_FS_CREATE 0x22
 #define INT_FS_WRITE 0x23
 
 // ==== PROCESS MANAGEMENT ====
+// Memory address where null-terminated CLI arguments are stored.
 #define PM_ARGS 0xFFBF
 
 // ==== FILE SYSTEM ====
+//
+// Each file on disk is stored as a fixed-size block:
+//
+//   [0..20]      path   (null-terminated string)
+//   [21]         flags  (bit 7: executable)
+//   [22..23]     size   (little-endian word)
+//   [24..9215]   data
+//
+
+// Maximum number of files on disk.
 #define FS_FILES 40
+// Offset of the file path in the file block.
 #define FS_PATH_OFFSET 0
+// Maximum length of a file path, in bytes.
 #define FS_PATH_SIZE 21
+// Offset of the flags field in the file block.
 #define FS_FLAGS_OFFSET FS_PATH_SIZE
+// Size of the flags field, in bytes.
 #define FS_FLAGS_SIZE 1
-#define FS_SIZE_OFFSET FS_PATH_SIZE + FS_PLAGS_SIZE
+// Offset of the file size field in the file block.
+#define FS_SIZE_OFFSET FS_PATH_SIZE + FS_FLAGS_SIZE
+// Size of the file size field, in bytes.
 #define FS_SIZE_SIZE 2
+// Total size of the file header (path + flags + size).
 #define FS_HEADER_SIZE FS_PATH_SIZE + FS_FLAGS_SIZE + FS_SIZE_SIZE
+// Offset where file data begins (right after the header).
 #define FS_DATA_OFFSET FS_HEADER_SIZE
+// Maximum length of file data, in bytes.
 #define FS_DATA_SIZE 9192
+// Total size of a file block on disk (header + data).
 #define FS_BLOCK_SIZE FS_DATA_SIZE + FS_HEADER_SIZE
 
+// 8-bit unsigned integer.
 typedef unsigned char byte_t;
+// 16-bit unsigned integer.
 typedef unsigned short word_t;
-// File handle, used for IO operations
+// File handle returned by open() and create(), used for write().
 typedef byte_t handle_t;
 
+// In-memory representation of a file block.
 typedef struct {
   byte_t name[FS_PATH_SIZE];
   byte_t flags;
@@ -35,8 +60,7 @@ typedef struct {
   byte_t data[FS_DATA_SIZE];
 } file_t;
 
-// Returns control back to OSle. Use it to exit from a running program and give
-// control back to the OS.
+// Returns control to OSle. Use it to exit a running program.
 //
 // Usage:
 //
@@ -45,7 +69,7 @@ __attribute__((naked, noreturn)) static void exit(void) {
   __asm__ volatile("int %0" ::"N"(INT_RETURN));
 }
 
-// Prints a char on the screen at the current cursor position.
+// Prints a character on the screen at the current cursor position.
 //
 // Usage:
 //
@@ -59,12 +83,13 @@ static void putc(char c) {
                    : "ax");
 }
 
-// Prints a null-terminated string on the screen at the current cursor position.
+// Prints up to maxlen characters of a null-terminated string on the screen at
+// the current cursor position.
 //
 // Usage:
 //
-//   puts("Hello, world!", 13);
-static void puts(const char *str, unsigned maxlen) {
+//   putsn("Hello, world!", 13);
+static void putsn(const char *str, unsigned maxlen) {
   __asm__ volatile("mov $0x0E, %%ah\n"
                    ".loop:\n"
                    "  lodsb\n"
@@ -78,25 +103,31 @@ static void puts(const char *str, unsigned maxlen) {
                    : "ax");
 }
 
-// Like puts, but appends a new line at the end.
+// Prints a null-terminated string on the screen. Shorthand for putsn(str, 0xFFFF).
+static inline void puts(const char *str) { putsn(str, 0xFFFF); }
+
+// Like putsn, but appends a new line at the end.
 //
 // Usage:
 //
 //   putln("Hello, world!", 13);
-static void putln(const char* str, unsigned maxlen) {
-  puts(str, maxlen);
+static void putln(const char *str, unsigned maxlen) {
+  putsn(str, maxlen);
   putc('\n');
   putc('\r');
 }
 
-// Tries to locate a file whose path is a null-terminated string in path.
+// Like puts, but appends a new line at the end. Shorthand for putln(str, 0xFFFF).
+static inline void putl(const char *str) { putln(str, 0xFFFF); }
+
+// Locates a file on disk and loads it into the provided buffer.
 //
-// If the file is found, its content will be loaded in file.
-// If the file cannot be found, a non-zero value is returned.
-// The file handle needed for write operations is stored in handle.
+// If the file is found, its content is loaded into file and the handle needed
+// for write operations is stored in handle.
+// Returns non-zero if the file cannot be found.
 //
-// The file buffer will include the entir_ file, headers included. See FILE
-// SYSTEM in osle.inc for details.
+// The file buffer includes the entire file block, headers included. See the
+// FILE SYSTEM section above for the layout.
 //
 // Usage:
 //
@@ -117,12 +148,11 @@ static int open(const char *path, handle_t *handle, file_t *file) {
   return error;
 }
 
-// Tries to create a file at path, a null-terminated string.
+// Creates a new file on disk and loads it into the provided buffer.
 //
-// If successful, the file will be created on the disk and file will point to
-// the memory area associated with that file. To update the file, use write().
-// If the file cannot be created, a non-zero value is returned.
-// The file handle needed for write operations is stored in handle.
+// If successful, the file is created on disk and its content is loaded into
+// file. The handle needed for write operations is stored in handle.
+// Returns non-zero if the file cannot be created.
 //
 // Usage:
 //
@@ -143,10 +173,9 @@ static int create(const char *path, handle_t *handle, file_t *file) {
   return error;
 }
 
-// Writes the file identified by handle to disk, updating its data with the
-// content in file.
+// Writes the file buffer to disk at the location identified by handle.
 //
-// In case of failure, a non-zero value is returned.
+// Returns non-zero on failure.
 //
 // Usage:
 //
@@ -166,12 +195,11 @@ static int write(handle_t handle, file_t *file) {
   return error;
 }
 
-// Reads a character from keyboard input.
+// Reads a character from keyboard input. Blocks until a key is pressed.
 //
 // Usage:
 //
 //   char c = getc();
-//   // c is the ASCII char inputed from keyboard
 static char getc(void) {
   word_t ax;
   __asm__ volatile("mov $0x00, %%ah\n"
