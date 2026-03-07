@@ -80,7 +80,7 @@ static void putc(char c) {
                    "int $0x10\n"
                    :
                    : "r"(c)
-                   : "ax");
+                   : "cc", "ax");
 }
 
 // Prints up to maxlen characters of a null-terminated string on the screen at
@@ -98,12 +98,13 @@ static void putsn(const char *str, unsigned maxlen) {
                    "  int $0x10\n"
                    "  loop .loop\n"
                    ".done:"
+                   : "+S"(str), "+c"(maxlen)
                    :
-                   : "S"(str), "c"(maxlen)
-                   : "ax");
+                   : "ax", "cc");
 }
 
-// Prints a null-terminated string on the screen. Shorthand for putsn(str, 0xFFFF).
+// Prints a null-terminated string on the screen. Shorthand for putsn(str,
+// 0xFFFF).
 static inline void puts(const char *str) { putsn(str, 0xFFFF); }
 
 // Like putsn, but appends a new line at the end.
@@ -117,7 +118,8 @@ static void putln(const char *str, unsigned maxlen) {
   putc('\r');
 }
 
-// Like puts, but appends a new line at the end. Shorthand for putln(str, 0xFFFF).
+// Like puts, but appends a new line at the end. Shorthand for putln(str,
+// 0xFFFF).
 static inline void putl(const char *str) { putln(str, 0xFFFF); }
 
 // Locates a file on disk and loads it into the provided buffer.
@@ -143,7 +145,7 @@ static int open(const char *path, handle_t *handle, file_t *file) {
                    "setc %0\n"
                    : "=q"(error), "=a"(ax)
                    : "N"(INT_FS_FIND), "b"(file), "D"(path)
-                   :);
+                   : "cc", "memory");
   (*handle) = (byte_t)ax;
   return error;
 }
@@ -168,7 +170,7 @@ static int create(const char *path, handle_t *handle, file_t *file) {
                    "setc %0\n"
                    : "=q"(error), "=a"(ax)
                    : "N"(INT_FS_CREATE), "b"(file), "D"(path)
-                   :);
+                   : "cc", "memory");
   (*handle) = (byte_t)ax;
   return error;
 }
@@ -191,7 +193,7 @@ static int write(handle_t handle, file_t *file) {
                    "setc %0\n"
                    : "=q"(error)
                    : "N"(INT_FS_WRITE), "b"(file), "d"(handle)
-                   :);
+                   : "cc", "memory");
   return error;
 }
 
