@@ -65,7 +65,7 @@ brew install bochs # optional, you can use Qemu if you prefer
 Install dependencies using your local package manager, e.g., on Debian:
 
 ```sh
-apt install nasm bochs # bochs is optional
+apt install nasm gcc-i686-linux-gnu bochs # bochs is optional
 ```
 </details>
 
