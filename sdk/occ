@@ -68,12 +68,12 @@ while [ $# -gt 0 ]; do
 done
 
 if [ -z "${infilepath}" ] || [ ! -f "${infilepath}" ]; then
-  error "unable to open ${filepath}"
+  error "unable to open ${infilepath}"
 fi
 
 inextension="${infilepath##*.}"
-infilename="$(basename ${infilepath%%*.} ".${inextension}")"
-infiledir="$(dirname ${infilepath%%*.})"
+infilename="$(basename "$infilepath" ".${inextension}")"
+infiledir="$(dirname "$infilepath")"
 obj="${infilename}.o"
 outfilepath=${outfilepath:-"${infiledir}/${infilename}.bin"}
 elfobj=""
