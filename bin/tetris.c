@@ -63,16 +63,6 @@ static void vput(byte_t r, byte_t c, byte_t ch) {
                    : "ax", "memory");
 }
 
-// Waits ms milliseconds
-static void wait(word_t ms) {
-  ms *= 1000;
-  __asm__ volatile("mov $0x86, %%ah\n\t"
-                   "int $0x15"
-                   :
-                   : "c"((word_t)(ms >> 16)), "d"((word_t)(ms & 0xFFFF))
-                   : "ax");
-}
-
 // Reads the keyboard buffer. Returns a byte_t if a key is pressed, else -1.
 static int key(void) {
   int ax = -1;
@@ -89,15 +79,6 @@ static int key(void) {
 }
 
 // Returns the number of clock ticks since midnight
-static word_t now(void) {
-  word_t cx, dx;
-  __asm__ volatile("xor %%ah, %%ah\n\t"
-                   "int $0x1A"
-                   : "=c"(cx), "=d"(dx)
-                   :
-                   : "ax");
-  return dx ^ cx;
-}
 
 // Makes the terminal cells square - makes the game look nicer
 static void sqfont(void) {
@@ -107,15 +88,6 @@ static void sqfont(void) {
                    :
                    :
                    : "ax", "bx");
-}
-
-// Clear screen
-static void cls(void) {
-  __asm__ volatile("mov $0x0003, %%ax\n"
-                   "int $0x10"
-                   :
-                   :
-                   :);
 }
 
 // Waits for the screen vertical retrace. Used to debounce draw calls and not
@@ -183,7 +155,7 @@ static void sweep(void) {
 static void spawn(void) {
   row = 0;
   col = 6;
-  type = now() % BLOCKS;
+  type = ticks() % BLOCKS;
   ori = 0;
 }
 
@@ -266,11 +238,11 @@ int main(int argc, char **argv) {
   sqfont();
   spawn();
 
-  word_t prevtick = now();
+  word_t prevtick = ticks();
   while (1) {
     input();
 
-    word_t currtick = now();
+    word_t currtick = ticks();
 
     // Unscientific way of making the game progression feel better
     word_t speed = score / 3 < 4 ? 6 - score / 3 : 2;
@@ -294,7 +266,7 @@ int main(int argc, char **argv) {
       prevtick = currtick;
       render();
     }
-    wait(33);
+    sleep(33333);
   }
 
   return 0;

@@ -210,4 +210,44 @@ static char getc(void) {
   return (char)(ax & 0xFF);
 }
 
+// Pauses execution for a number of microseconds.
+//
+// Usage:
+//
+//   sleep(16666);
+static void sleep(word_t us) {
+  __asm__ volatile("mov $0x86, %%ah\n\t"
+                   "int $0x15"
+                   :
+                   : "c"((word_t)(us >> 16)), "d"((word_t)(us & 0xFFFF))
+                   : "ax");
+}
+
+// Clear screen and returns to text mode.
+//
+// Usage:
+//
+//   cls();
+static void cls(void) {
+  __asm__ volatile("mov $0x0003, %%ax\n"
+                   "int $0x10"
+                   :
+                   :
+                   :);
+}
+
+// Returns the number of clock ticks since midnight.
+//
+// Usage:
+//   word_t now = ticks();
+static word_t ticks(void) {
+  word_t cx, dx;
+  __asm__ volatile("xor %%ah, %%ah\n\t"
+                   "int $0x1A"
+                   : "=c"(cx), "=d"(dx)
+                   :
+                   : "ax");
+  return dx ^ cx;
+}
+
 #endif
