@@ -53,11 +53,11 @@ static word_t shapes[BLOCKS][ORIS] = {
 // Used to prevent flickering
 static void vput(byte_t r, byte_t c, byte_t ch) {
   word_t off = (r * 80 + c) * 2;
-  __asm__ volatile("push %%es\n"
+  __asm__ volatile("pushw %%es\n"
                    "mov $0xB800, %%ax\n"
                    "mov %%ax, %%es\n"
                    "movb %[ch], %%es:(%[off])\n"
-                   "pop %%es\n"
+                   "popw %%es\n"
                    :
                    : [off] "D"(off), [ch] "q"(ch)
                    : "ax", "memory");

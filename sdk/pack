@@ -88,7 +88,7 @@ while [ "$block" -lt "$TOTAL_BLOCKS" ]; do
   # Extract the current chunk to check if it's empty
   dd if="$osle" of="$temp_file" bs=$BLOCK_SIZE skip=$block count=$FILE_BLOCKS 2>/dev/null
   
-  if [ "$(hexdump -v -e '/1 "%02X"' "$temp_file" | tr -d '0')" = "" ]; then
+  if [ "$(od -v -An -tx1 "$temp_file" | tr -d ' 0\n')" = "" ]; then
     dd if="$binary" of="$osle" bs=$BLOCK_SIZE seek=$block conv=notrunc
     rm "$temp_file"
     exit 0
