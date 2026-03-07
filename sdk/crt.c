@@ -25,7 +25,11 @@ __attribute__((section(".text.prologue"), noreturn)) void __prologue(void) {
     if (args[i] == ' ') {
       args[i] = 0;
     } else if (i == 0 || args[i - 1] == 0) {
-      argv[argc++] = &args[i];
+      if (argc < MAX_ARGS - 1) {
+        argv[argc++] = &args[i];
+      } else {
+        break;
+      }
     }
   }
 
