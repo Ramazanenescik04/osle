@@ -43,7 +43,7 @@ Follow the [step-by-step tutorial](./tutorial/) to write your first program!
 To develop OSle and OSle programs you will need the following tools:
 
 - [nasm](https://www.nasm.us)
-- [i686-gcc-elf](https://formulae.brew.sh/formula/i686-elf-gcc)
+- [i686-elf-gcc](https://formulae.brew.sh/formula/i686-elf-gcc)
 - [GNU make](https://www.gnu.org/software/make/) (usually preinstalled)
 - [bochs](https://bochs.sourceforge.io) (optional)
 
