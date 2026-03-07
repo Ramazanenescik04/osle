@@ -7,7 +7,7 @@ A tiny and mighty boot sector OS.
 </p>
 
 <div align="center">
-  <video src="https://github.com/user-attachments/assets/a2cab8f8-fd60-4947-b886-4b1741072e22"></video>
+  <video src="https://github.com/user-attachments/assets/3332b48a-aa3c-48a0-9d8e-a084468d04cc"></video>
 </div>
 
 <h4 align="center">
